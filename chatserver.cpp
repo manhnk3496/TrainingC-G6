@@ -24,15 +24,21 @@ ChatServer::ChatServer(QMainWindow *parent) :
 {
     ui->setupUi(this);
     server = new QTcpServer(this);
+    socket = new QTcpSocket(this);
+    //set Ip and Port
+    ui->lineEdit_Ip->setText("192.168.12.51");
+    ui->lineEdit_Ip->setEnabled(false);
+    ui->lineEdit_Port->setText("6789");
+    ui->lineEdit_Port->setEnabled(false);
 
     ui->lineEdit_Name->setText("Client");
     ui->lineEdit_Port->setEnabled(false);
     ui->lineEdit_Port->setText("6789");
     ui->pushButton_Listen->setText("Listen");
-    ui->label_Notify->setText("Server is close!");
-    ui->lineEdit_Name->setText("Server!");
-    ui->lineEdit_Name->setEnabled(false);
+    qDebug() << "No connect!";
 
+    connect(ui->pushButton_Send,SIGNAL(clicked(bool)),this,SLOT(send_message()));
+    connect(ui->lineEdit_Send,SIGNAL(returnPressed()),this,SLOT(send_message()));
     connect(server,SIGNAL(newConnection()),this,SLOT(add_connect()));
 
     server_add = QHostAddress::AnyIPv4;
@@ -58,46 +64,31 @@ ChatServer::~ChatServer()
     delete ui;
 }
 
-//
-void ChatServer::receive_message(){
-    qDebug() << "New message";
-    QTcpSocket* socket = static_cast<QTcpSocket*>(sender());
-    QBuffer *buffer = buffers.value(socket);
-    qint64 bytes = buffer->write(socket->readAll());
-    buffer->seek(buffer->pos() - bytes);
-    while (buffer->canReadLine())
-    {
-        QByteArray line = buffer->readLine();
-        foreach (QTcpSocket* connect, connections){
-            connect->write(line);
+//send message -> compelate
+void ChatServer::send_message(){
+    QMessageBox box;
+
+    if(!socket->isOpen()){
+        ui->lineEdit_Send->clear();
+        qDebug()<< "Socket is not open, Cann't send message now";
+        box.setText("Socket is close! Cann't send message now!");
+        box.exec();
+    }
+    else{
+        bool a = socket->write(ui->lineEdit_Send->text().toLatin1());
+        if(a){
+            qDebug() << "Send message success!";
+            ui->textEdit_content->append("Server: " + ui->lineEdit_Send->text());
+            ui->lineEdit_Send->clear();
+        }
+        else{
+            qDebug() << socket->errorString();
+            box.setText("Message error!");
+            box.exec();
         }
     }
-    ui->lineEdit_Send->clear();
-void ChatServer::on_btnlistent_clicked()
-{
-    port = ui->editport->text().toInt();
-    bool b=server->listen(server_addr,port);
-    if(b)
-    {
-        server->close();
-        qDebug("server started");
-        ui->btnlistent->setEnabled(true);
-        //ui->btnStop->setEnabled(true);
-    }
-   else
-    {
-        qDebug("server can't start! check IP or Port");
-    }
 }
-//void ChatServer::on_btnStop_clicked()
-//{
-//   if(server->isListening())
-//   {
-//       server->close();
-//        ui->btnStart->setEnabled(true);
-//        ui->btnStop->setEnabled(false);
-//    }
-//}
+
 void ChatServer::addConnection()
 {
     QTcpSocket* connection =server->nextPendingConnection();
@@ -107,7 +98,7 @@ void ChatServer::addConnection()
     buffers.insert(connection, buffer);
     connect(connection, SIGNAL(disconnected()),this, SLOT(removeConnection()));
     connect(connection, SIGNAL(readyRead()), this, SLOT(receiveMessage()));
-
+}
 // --> Compelate
 //receive message -> compelate
 void ChatServer::receive_message(){
@@ -121,7 +112,7 @@ void ChatServer::removeConnection()
     buffer->close();
     ui->btnlistent->setEnabled(true);
     buffer->deleteLater();
-
+}
 //add connect --> compelate
 void ChatServer::add_connect(){
     qDebug() << "New connnect!";
@@ -152,7 +143,6 @@ void ChatServer::remove_connect(){
     connections.removeAll(socket);
     socket->deleteLater();
 }
-void ChatServer::receiveMessage()
 
 // --> Compelate
 void ChatServer::on_pushButton_Listen_clicked()
@@ -171,32 +161,26 @@ void ChatServer::on_pushButton_Listen_clicked()
             box.exec();
         }
 {
-
     QTcpSocket* socket = static_cast<QTcpSocket*>(sender());
-
     QBuffer *buffer = buffers.value(socket);
-
     qint64 bytes = buffer->write(socket->readAll());
-
     buffer->seek(buffer->pos() - bytes);
-
     while (buffer->canReadLine())
-
     {
             QByteArray line = buffer->readLine();
             ui->editchat->append(line.simplified());
-
             foreach (QTcpSocket* connection, connections)
 
             {
-
                     connection->write(line);
-
             }
 
     }
     else{
         server->close();
+        if(socket->isOpen()){
+            socket->close();
+        }
         if(server->isListening()){
             qDebug() << server->errorString();
             box.setText("Cann't close Server!");
@@ -208,15 +192,4 @@ void ChatServer::on_pushButton_Listen_clicked()
             qDebug() << "Server is close!";
         }
 
-}
-void ChatServer::sendMessage(){
-   bool a = socket->write(ui->editmes->text().toLatin1());
-   if(a){
-        qDebug() << "Send message is success!!!";
-        ui->editchat->append("Client: " + ui->editmes->text());
-    }
-    else{
-        qDebug() << "Send message is error!!!";
-   }
-    ui->editmes->clear();
 }

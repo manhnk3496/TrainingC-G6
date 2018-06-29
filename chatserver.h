@@ -40,12 +40,12 @@ private:
 
     void on_toolButton_file_clicked();
 
-
 private:
     QTcpServer *server;
     QTcpSocket *socket;
     QList<QTcpSocket*> connections;
     QHash<QTcpSocket*, QBuffer*> buffers;
+
     Ui::ChatServer *ui;
 private slots:
     void on_btnlistent_clicked();
