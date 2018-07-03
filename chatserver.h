@@ -2,11 +2,12 @@
 #define CHATSERVER_H
 
 #include <QMainWindow>
-
 #include <QTcpServer>
+#include <QList>
+#include <QHash>
 
 class QTcpSocket;
-class QMessageBox;
+class QBuffer;
 
 
 namespace Ui {
@@ -22,20 +23,16 @@ public:
     ~ChatServer();
 
 private slots:
-    void send_message();
     void receive_message();
     void add_connect();
     void remove_connect();
 
     void on_pushButton_Listen_clicked();
 
-    void on_toolButton_file_clicked();
-
-
-
 private:
-    QTcpSocket *socket;
     QTcpServer *server;
+    QList<QTcpSocket*> connections;
+    QHash<QTcpSocket*, QBuffer*> buffers;
 
     Ui::ChatServer *ui;
 };
