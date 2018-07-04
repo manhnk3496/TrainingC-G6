@@ -1,4 +1,5 @@
-#include "mainwindow.h"
+
+#include "Clientient.h"
 #include "ui_mainwindow.h"
 
 #include <QTcpSocket>
@@ -14,14 +15,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-//    MainWindow w;
-//    w.setFixedSize(200,300);
     socket = new QTcpSocket(this);
     time = new QTimer(this);
 
     //set Ip and Port
-    ui->lineEdit_Ip->setText("192.168.12.51");
-    ui->lineEdit_Ip->setEnabled(false);
+    ui->lineEdit_Name->setText("Client");
     ui->lineEdit_Port->setText("6789");
     ui->lineEdit_Port->setEnabled(false);
 
@@ -33,8 +31,6 @@ MainWindow::MainWindow(QWidget *parent) :
     if(!socket->isOpen()){
         qDebug() << "Socket not Open!";
     }
-
-    //
     connect(ui->lineEdit_Send,SIGNAL(returnPressed()),this,SLOT(send_message()));
     connect(ui->pushButton_Send,SIGNAL(clicked(bool)),this,SLOT(send_message()));
     connect(socket,SIGNAL(readyRead()),this,SLOT(receive_message()));
@@ -50,33 +46,39 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-//send message --> Conpelate
+// --> Conpelate
 void MainWindow::send_message(){
     QMessageBox box;
-    bool a = socket->write(ui->lineEdit_Send->text().toLatin1());
-    if(a){
-        qDebug() << "Send message success!";
-        ui->textEdit_Content->append("Client: " + ui->lineEdit_Send->text());
+    if(!socket->isOpen()){
+        qDebug()<< "Socket is not open, Cann't send message now";
+        box.information(this,tr("The Title"),tr("Socket is close! Cann't send message now!"));
+        ui->lineEdit_Send->clear();
     }
     else{
-        qDebug() << socket->errorString();
-        box.setText("Message error!");
-        box.exec();
+        QString msg = ui->lineEdit_Name->text() +": "+ ui->lineEdit_Send->text() + "\n";
+        bool a = socket->write(msg.toLatin1());
+        if(a){
+            qDebug() << "Send message success!";
+            ui->lineEdit_Send->clear();
+        }
+        else{
+            qDebug() << socket->errorString();
+            box.information(this,tr("The Title"),tr("Message error!"));
+            ui->lineEdit_Send->clear();
+        }
     }
-    ui->lineEdit_Send->clear();
 }
 
-//receive message --> Compelate
+// --> Compelate
 void MainWindow::receive_message(){
     qDebug() << "Have a message!";
-    ui->textEdit_Content->append("Server: " + socket->readAll());
+    ui->textEdit_Content->append(socket->readAll());
 }
 
 //connect/disconnect to server
 void MainWindow::on_pushButton_Connect_clicked(){
-    QMessageBox box;
     if(ui->pushButton_Connect->text() == "Connect"){
-        socket->connectToHost("192.168.12.51",port);
+        socket->connectToHost("127.0.0.1",port);
         if(socket->isOpen()){
             qDebug() << "Connecting...!";
             ui->pushButton_Connect->setText("Disconncet");
@@ -93,13 +95,12 @@ void MainWindow::on_pushButton_Connect_clicked(){
 // --> Compelate
 void MainWindow::socket_disconnect(){
     QMessageBox box;
-    qDebug() << "Server close!";
+    qDebug() << "Disconnect to server!";
     ui->pushButton_Connect->setText("Connect");
-    box.setText("Server close!");
-    box.exec();
+    box.information(this,tr("The Title"),tr("Disconnect to server!"));
 }
 
-//box file --> compelate
+// --> compelate
 void MainWindow::on_toolButton_file_clicked()
 {
     QString filename = QFileDialog::getOpenFileName(this,"","/","");
@@ -112,11 +113,10 @@ void MainWindow::on_toolButton_file_clicked()
 //time out connect to server
 void MainWindow::time_connect(){
     QMessageBox box;
-    box.setText("Server busy!");
+    box.information(this,tr("The Title"),tr("Server is busy!"));
     qDebug() << "Server Busy!";
     ui->pushButton_Connect->setText("Connect");
     time->stop();
-    box.exec();
     socket->close();
 }
 

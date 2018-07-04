@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>362</width>
-    <height>465</height>
+    <width>293</width>
+    <height>570</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,12 +29,12 @@
         <item>
          <widget class="QLabel" name="label_2">
           <property name="text">
-           <string>Ip</string>
+           <string>Name</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QLineEdit" name="lineEdit_Ip"/>
+         <widget class="QLineEdit" name="lineEdit_Name"/>
         </item>
         <item>
          <widget class="QLabel" name="label_3">
@@ -136,7 +136,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>362</width>
+     <width>293</width>
      <height>25</height>
     </rect>
    </property>
