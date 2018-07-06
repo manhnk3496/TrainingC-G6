@@ -1,5 +1,5 @@
-#ifndef CHATSERVER_H
-#define CHATSERVER_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QMainWindow>
 #include <QTcpServer>
@@ -9,32 +9,41 @@
 class QTcpSocket;
 class QBuffer;
 
-
 namespace Ui {
-class ChatServer;
+class MainWindow;
 }
 
-class ChatServer : public QMainWindow
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit ChatServer(QWidget *parent = 0);
-    ~ChatServer();
+    explicit MainWindow(QWidget *parent = 0);
+    ~MainWindow();
 
 private slots:
+    void send_message();
     void receive_message();
     void add_connect();
     void remove_connect();
+    void setIcon(QString &a);
+    int checkMessage(QString &a);
 
     void on_pushButton_Listen_clicked();
 
+    void on_toolButton_file_clicked();
+
+    void on_pushButton_SendFile_clicked();
+
 private:
+    QTcpSocket *socket;
     QTcpServer *server;
     QList<QTcpSocket*> connections;
     QHash<QTcpSocket*, QBuffer*> buffers;
 
-    Ui::ChatServer *ui;
+
+
+    Ui::MainWindow *ui;
 };
 
-#endif // CHATSERVER_H
+#endif // MAINWINDOW_H
